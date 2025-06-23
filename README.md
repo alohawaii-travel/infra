@@ -1,22 +1,16 @@
-# Alohawaii Tour Platform - Infrastructure
+# 🌺 AlohaWaii Infrastructure
 
-A comprehensive Docker-based development environment for the Alohawaii tour platform, featuring orchestration for API, Hub, and database services.
+**Comprehensive Docker orchestration and development environment for the AlohaWaii tour platform.**
 
-## 🏗️ Repository Structure
+This repository provides the complete infrastructure layer that orchestrates the AlohaWaii microservices architecture, including the API backend and Staff Hub dashboard with multilingual support (English 🇺🇸, Korean 🇰🇷, Japanese 🇯🇵).
 
-This repository contains the infrastructure and orchestration for the Alohawaii platform. The actual services are maintained in separate GitHub repositories:
-
-- **API Service**: `alohawaii-api` - Backend API with Next.js and Prisma
-- **Hub Service**: `alohawaii-hub` - Staff management interface  
-- **Infrastructure**: `alohawaii-infrastructure` - This repository (Docker orchestration)
-
-## 🌺 Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 - Docker and Docker Compose
 - Git
 
-### Initial Setup
+### One-Command Setup
 ```bash
 # Clone the infrastructure repository
 git clone <infrastructure-repository-url>
@@ -32,32 +26,61 @@ make setup
 make start-all
 ```
 
-The platform will be available at:
-- **API**: http://localhost:4000
-- **Staff Hub**: http://localhost:3000  
+**🌐 Services Available:**
+- **API**: http://localhost:4000 (Swagger docs at `/api/docs`)
+- **Staff Hub**: http://localhost:3000 (Multilingual interface)
 - **Database**: localhost:5432
 
-## 🐳 Docker Development Environment
+## 🏗️ Architecture Overview
 
-### Architecture Overview
 The platform consists of three main services orchestrated with Docker Compose:
 
-- **API Service** (`alohawaii-api`): Next.js API server on port 4000 - *Separate repository*
-- **Hub Service** (`alohawaii-hub`): Staff management interface on port 3000 - *Separate repository*
-- **Database Service** (`alohawaii-db`): PostgreSQL 15 on port 5432 - *Managed by this infrastructure*
+| Service | Purpose | Port | Repository |
+|---------|---------|------|------------|
+| **alohawaii-api** | Next.js API server with Swagger docs | 4000 | Separate repo |
+| **alohawaii-hub** | Staff management interface (multilingual) | 3000 | Separate repo |
+| **alohawaii-db** | PostgreSQL 15 database | 5432 | Managed here |
 
 All services run in the `alohawaii-network` for secure inter-service communication.
 
-**Note**: The API and Hub services are maintained in separate repositories. Use `make setup-repos` to clone them into the correct directories.
-
-### Available Commands
-
-#### Setup Commands
-```bash
-make setup       # Initial setup (build images, create network)
+**📁 Repository Structure:**
+```
+alohawaii-infrastructure/     # This repo - Docker orchestration
+├── ../api/                   # Cloned from alohawaii-api repo
+├── ../hub/                   # Cloned from alohawaii-hub repo
+├── scripts/                  # Automation and setup scripts
+├── docs/                     # Additional documentation
+├── docker-compose.yml        # Main orchestration
+└── Makefile                  # Development commands
 ```
 
-#### Service Management
+## 📋 Essential Commands
+
+### 🔄 Daily Workflow
+```bash
+# Pull latest changes from all services
+make update-repos
+
+# Start development environment
+make start-all
+
+# View logs
+make logs
+
+# Check service status
+make status
+
+# Stop when done
+make stop
+```
+
+### ⚙️ Setup Commands
+```bash
+make setup       # Initial setup (build images, create network)
+make setup-repos # Clone API and Hub repositories
+```
+
+### 🚀 Service Management
 ```bash
 make start       # Start API + Database
 make start-all   # Start API + Hub + Database  
@@ -67,7 +90,7 @@ make stop        # Stop all services
 make restart     # Restart all services
 ```
 
-#### Monitoring & Debugging
+### 🔍 Monitoring & Debugging
 ```bash
 make logs        # Show logs from all services
 make logs-api    # Show API logs
@@ -75,7 +98,7 @@ make logs-hub    # Show Hub logs
 make status      # Show service status
 ```
 
-#### Development Tools
+### 🛠️ Development Tools
 ```bash
 make shell-api   # Open shell in API container
 make shell-hub   # Open shell in Hub container
@@ -84,19 +107,18 @@ make migrate     # Run database migrations
 make seed        # Seed database with sample data
 ```
 
-#### Maintenance
+### 🧹 Maintenance
 ```bash
 make clean       # Remove all containers and data
 make rebuild     # Rebuild and restart everything
 ```
 
-#### Repository Management
+### 📦 Repository Management
 ```bash
-make setup-repos  # Clone API and Hub repositories
 make update-repos # Update API and Hub repositories
 ```
 
-### Docker Compose Configuration
+## 🐳 Docker Configuration
 
 The setup uses multiple compose files for different environments:
 
@@ -105,78 +127,82 @@ The setup uses multiple compose files for different environments:
 - `docker-compose.prod.yml`: Production configuration
 - `docker-compose.test.yml`: Testing environment
 
-#### Development Features
+### Development Features
 - **Hot Reload**: Code changes automatically trigger rebuilds
 - **Volume Mounts**: Source code mounted for live editing
 - **Debug Ports**: Node.js debugging enabled on port 9229
 - **Database Persistence**: Data persists between container restarts
 
-#### Environment Variables
-Development environment variables are automatically loaded from:
-- `.env.local` (highest priority)
-- `.env`
-
-### Health Checks & Monitoring
-
-All services include health checks for reliable startup:
-
-```bash
-# Check service status
-make status
-
-# API health endpoint
-curl http://localhost:4000/api/external/health
-
-# View container logs
-make logs-api
-make logs-hub
-```
-
-## 📁 Project Structure
-
-### Root Directory
-```
-alohawaii/
-├── infra/                  # Infrastructure repository (this directory)
-│   ├── scripts/           # Automation and repository management scripts
-│   ├── docker-compose.yml # Main compose configuration
-│   ├── docker-compose.*.yml # Environment-specific configs
-│   ├── docker-manager.sh  # Advanced Docker management
-│   └── Makefile          # Simplified commands
-├── api/                   # API service (separate repository)
-└── hub/                   # Staff Hub service (separate repository)
-```
-
-### API Service (`../api`)
-```
-../api/
-├── src/
-│   ├── app/               # Next.js 13+ app directory
-│   ├── components/        # Reusable components
-│   ├── lib/              # Utilities and configuration
-│   └── types/            # TypeScript definitions
-├── prisma/               # Database schema and migrations
-├── tests/                # Test suites
-├── Dockerfile           # API container configuration
-└── package.json         # Dependencies and scripts
-```
-
-### Hub Service (`../hub`)
-```
-../hub/
-├── src/
-│   ├── app/              # Next.js 13+ app directory
-│   ├── components/       # UI components
-│   └── lib/             # Utilities
-├── Dockerfile           # Hub container configuration
-└── package.json         # Dependencies and scripts
-```
-
 ## 🚀 Development Workflow
 
 ### Daily Development
-1. **Start the environment**:
-   ```bash
+1. **Start the environment**: `make start-all`
+2. **Make changes**: Edit code in `../api/` or `../hub/`
+3. **View logs**: `make logs` to monitor all services
+4. **Test changes**: Access services at the URLs above
+5. **Stop when done**: `make stop`
+
+### Team Collaboration
+```bash
+# Pull latest infrastructure changes
+git pull origin main
+
+# Update all service repositories
+make update-repos
+
+# Restart to pick up changes
+make restart
+```
+
+## 🌟 Key Features
+
+✅ **Multilingual Support** - Hub interface in English, Korean, and Japanese  
+✅ **One-Command Setup** - `make setup` gets everything running  
+✅ **Multi-Service Management** - API, Hub, and Database orchestration  
+✅ **Repository Automation** - Scripts to manage separate API and Hub repositories  
+✅ **Development Optimized** - Hot reloading, volume mounts, and debugging support  
+✅ **Production Ready** - Production Docker configurations and deployment scripts  
+✅ **Team Friendly** - Consistent development environment across all machines  
+
+## 📚 Documentation
+
+- **[Setup Guide](docs/SETUP.md)** - Detailed setup instructions and troubleshooting
+- **[API Documentation](http://localhost:4000/api/docs)** - Swagger documentation (when API is running)
+- **Makefile** - Run `make help` to see all available commands
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Port conflicts**: If ports 3000, 4000, or 5432 are in use:
+```bash
+make stop
+# Kill any conflicting processes
+make start-all
+```
+
+**Services won't start**: Check Docker is running and has sufficient resources:
+```bash
+make status
+make logs
+```
+
+**Database connection issues**:
+```bash
+make migrate
+make seed
+```
+
+## 🤝 Contributing
+
+1. Make changes to infrastructure in this repository
+2. For API changes, work in the `../api/` directory
+3. For Hub changes, work in the `../hub/` directory
+4. Use `make` commands for consistent development workflow
+
+## 📧 Support
+
+For questions about the infrastructure setup, check the documentation in the `docs/` directory or review the Makefile commands with `make help`.
    make start-all
    ```
 
