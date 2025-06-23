@@ -1,0 +1,37 @@
+# Development overrides for docker-compose.yml
+# This file is automatically used by docker-compose in development
+
+services:
+  api:
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true # Enable hot reload in Docker
+    volumes:
+      - ../api:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "4000:4000"
+      - "9229:9229" # Node.js debugger port
+    command: npm run dev
+
+  hub:
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true # Enable hot reload in Docker
+    volumes:
+      - ../hub:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    command: npm run dev
+
+  db:
+    ports:
+      - "5432:5432" # Expose for local tools like pgAdmin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../api/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Mount additional SQL files for development
+      - ../api/prisma:/docker-entrypoint-initdb.d/prisma

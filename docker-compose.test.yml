@@ -1,0 +1,209 @@
+# Docker Compose for Test Environment
+#
+# 🧠 LEARNING: Why separate test environment?
+#
+# Testing requires isolation:
+# ✅ Separate database to avoid contaminating dev data
+# ✅ Different ports to run alongside dev environment
+# ✅ Test-specific configurations
+# ✅ Faster startup for CI/CD pipelines
+# ✅ Reproducible test conditions
+#
+# This environment is used for:
+# - Integration tests (real database)
+# - E2E tests (full application stack)
+# - CI/CD pipeline testing
+# - Local development testing
+
+version: "3.8"
+
+services:
+  # Test Database
+  # 🧠 LEARNING: Why separate test database?
+  # - Prevents tests from affecting development data
+  # - Allows destructive operations (dropping tables, etc.)
+  # - Faster test execution with optimized settings
+  # - Consistent test data state
+  test-db:
+    image: postgres:15-alpine
+    container_name: alohawaii-test-db
+    restart: unless-stopped
+    ports:
+      - "5433:5432" # Different port from dev database (5432)
+    environment:
+      POSTGRES_DB: alohawaii_test
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      # 🧠 LEARNING: Test database optimizations
+      # These settings prioritize speed over data safety
+      # NEVER use these in production!
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    volumes:
+      # Use tmpfs for faster I/O in tests (data not persisted)
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+        tmpfs:
+          size: 100M
+      # Copy initialization scripts
+      - ../api/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c log_statement=none
+      -c log_min_duration_statement=-1
+      -c log_checkpoints=off
+      -c log_connections=off
+      -c log_disconnections=off
+      -c log_lock_waits=off
+      -c fsync=off
+      -c synchronous_commit=off
+      -c full_page_writes=off
+      -c checkpoint_segments=32
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c shared_buffers=128MB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test -d alohawaii_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Test API Server (optional - for E2E tests)
+  # 🧠 LEARNING: When to use containerized API for tests?
+  # - E2E tests that need complete isolation
+  # - CI/CD environments
+  # - Testing deployment configurations
+  # - Multi-service integration tests
+  test-api:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+      target: development # Use development stage for faster builds
+    container_name: alohawaii-test-api
+    ports:
+      - "4001:4000" # Different port from dev API (4000)
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://test:test@test-db:5432/alohawaii_test
+      NEXTAUTH_URL: http://localhost:4001
+      NEXTAUTH_SECRET: test-secret-key-for-testing
+
+      # 🧠 LEARNING: Test-specific OAuth configuration
+      # In tests, we mock OAuth but need valid config format
+      GOOGLE_CLIENT_ID: mock-google-client-id-for-testing
+      GOOGLE_CLIENT_SECRET: mock-google-client-secret-for-testing
+      API_DOMAIN_WHITELIST: testcompany.com,example.org
+
+      # Test database connection
+      TEST_DATABASE_URL: postgresql://test:test@test-db:5432/alohawaii_test
+
+    depends_on:
+      test-db:
+        condition: service_healthy
+    volumes:
+      # Mount source code for development
+      - ../api:/app
+      - /app/node_modules
+      - /app/.next
+    command: >
+      sh -c "
+        echo '🧪 Waiting for test database...' &&
+        npx wait-port test-db:5432 &&
+        echo '🔧 Running database migrations...' &&
+        npx prisma migrate deploy &&
+        echo '🌱 Seeding test database...' &&
+        npx prisma db seed &&
+        echo '🚀 Starting test API server...' &&
+        npm run dev
+      "
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:4000/api/external/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Test Runner Container (optional)
+  # 🧠 LEARNING: Containerized test execution
+  # Benefits:
+  # - Consistent test environment across machines
+  # - Isolated from host system
+  # - Easy CI/CD integration
+  # - Reproducible test results
+  test-runner:
+    build:
+      context: ../api
+      dockerfile: Dockerfile
+      target: development
+    container_name: alohawaii-test-runner
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://test:test@test-db:5432/alohawaii_test
+      TEST_DATABASE_URL: postgresql://test:test@test-db:5432/alohawaii_test
+      NEXTAUTH_URL: http://test-api:4000
+      NEXTAUTH_SECRET: test-secret-key-for-testing
+      GOOGLE_CLIENT_ID: mock-google-client-id-for-testing
+      GOOGLE_CLIENT_SECRET: mock-google-client-secret-for-testing
+      API_DOMAIN_WHITELIST: testcompany.com,example.org
+    depends_on:
+      test-db:
+        condition: service_healthy
+      test-api:
+        condition: service_healthy
+    volumes:
+      - ../api:/app
+      - /app/node_modules
+    working_dir: /app
+    command: >
+      sh -c "
+        echo '🧪 Preparing test environment...' &&
+        npx wait-port test-db:5432 &&
+        npx wait-port test-api:4000 &&
+        echo '🔧 Running database setup...' &&
+        npx prisma migrate deploy &&
+        echo '🧪 Running tests...' &&
+        npm run test:ci
+      "
+    profiles:
+      - testing # Only start when explicitly requested
+
+# 🧠 LEARNING: Docker Compose Volumes
+# Different volume strategies for testing:
+volumes:
+  # Persistent test data (if needed for debugging)
+  test-db-data:
+    driver: local
+
+  # Test node_modules cache
+  test-node-modules:
+    driver: local
+
+# 🧠 LEARNING: Docker Networks
+# Isolated network for test environment
+networks:
+  default:
+    name: alohawaii-test
+    driver: bridge
+# Usage Examples:
+#
+# Start test database only:
+# docker-compose -f docker-compose.test.yml up test-db
+#
+# Start full test environment:
+# docker-compose -f docker-compose.test.yml up test-db test-api
+#
+# Run tests in container:
+# docker-compose -f docker-compose.test.yml --profile testing up test-runner
+#
+# Clean up test environment:
+# docker-compose -f docker-compose.test.yml down -v
+#
+# Run integration tests locally against containerized database:
+# docker-compose -f docker-compose.test.yml up -d test-db
+# npm run test:integration
+#
+# CI/CD usage:
+# docker-compose -f docker-compose.test.yml --profile testing up --abort-on-container-exit
