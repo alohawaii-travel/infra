@@ -373,14 +373,6 @@ The `/scripts` directory contains automation and utility scripts:
 - `setup-services.sh` - Clone API and Hub repositories (used by `make setup-repos`)
 - `update-services.sh` - Pull latest changes from service repos (used by `make update-repos`)
 
-### Legacy Development Scripts
-These scripts are maintained for compatibility but Docker commands are preferred:
-- `dev-start.sh` → Use `make start-all` instead
-- `start-api.sh` → Use `make start-api` instead  
-- `start-hub.sh` → Use `make start-hub` instead
-- `start-db.sh` → Included in `make start` instead
-- `test-setup.sh` → Use `make test` instead
-
 ### Usage
 Repository management scripts are actively used and integrated into the Makefile workflow. Legacy development scripts can still be used but the Makefile commands provide better integration and error handling.
 

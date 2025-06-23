@@ -11,6 +11,7 @@ help:
 	@echo ""
 	@echo "Setup Commands:"
 	@echo "  make setup       - Initial setup (build images, create network)"
+	@echo "  make gen-keys    - Generate secure API keys for development"
 	@echo ""
 	@echo "Service Commands:"
 	@echo "  make start       - Start API + Database"
@@ -45,6 +46,10 @@ help:
 # Setup
 setup:
 	@./docker-manager.sh setup
+
+# Generate API keys
+gen-keys:
+	@./scripts/generate-api-keys.sh
 
 # Service management
 start:
