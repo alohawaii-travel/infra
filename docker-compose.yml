@@ -56,12 +56,10 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-    environment:
-      - NEXTAUTH_URL=http://localhost:3000
-      - API_URL=http://api:4000
-      - NODE_ENV=development
     env_file:
       - ../hub/.env.local
+    environment:
+      - NODE_ENV=development
     depends_on:
       - api
     volumes:
