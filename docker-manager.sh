@@ -69,7 +69,7 @@ show_help() {
     echo "  shell-api       Open shell in API container"
     echo "  shell-hub       Open shell in Hub container"
     echo "  shell-db        Open shell in Database container"
-    echo "  test            Run API tests"
+    echo "  test            Run API tests (uses mocked database)"
     echo "  migrate         Run database migrations"
     echo "  seed            Seed database with initial data"
     echo ""
@@ -142,7 +142,7 @@ start_services() {
     print_success "Services started!"
     print_info "API: http://localhost:4000"
     print_info "Hub: http://localhost:3000 (if started)"
-    print_info "Database: postgresql://user:password@localhost:5432/alohawaii_dev"
+    print_info "Database: postgresql://user:password@localhost:5432/alohawaii_db"
 }
 
 stop_services() {
@@ -211,7 +211,7 @@ open_shell() {
 
 run_tests() {
     check_docker
-    print_info "Running API tests..."
+    print_info "Running API tests with mocked database..."
     docker-compose exec api npm test
 }
 

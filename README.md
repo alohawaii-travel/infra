@@ -102,10 +102,18 @@ make status      # Show service status
 ```bash
 make shell-api   # Open shell in API container
 make shell-hub   # Open shell in Hub container
-make test        # Run API tests
+make test        # Run API tests (uses mocked database)
 make migrate     # Run database migrations
 make seed        # Seed database with sample data
 ```
+
+### 💾 Database Operations
+Database operations are now managed directly from the API directory.
+See the `/api/prisma/README.md` for details on:
+- Running migrations
+- Pushing schema changes
+- Seeding data
+- Using Prisma Studio to browse and edit data
 
 ### 🧹 Maintenance
 ```bash
@@ -125,7 +133,6 @@ The setup uses multiple compose files for different environments:
 - `docker-compose.yml`: Base configuration
 - `docker-compose.override.yml`: Development overrides (auto-loaded)
 - `docker-compose.prod.yml`: Production configuration
-- `docker-compose.test.yml`: Testing environment
 
 ### Development Features
 - **Hot Reload**: Code changes automatically trigger rebuilds

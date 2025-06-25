@@ -142,7 +142,6 @@ echo ""
 echo "⚙️ Updating Hub environment..."
 # Update Hub environment variables
 update_var "$HUB_ENV" "NEXTAUTH_SECRET" "$NEXTAUTH_SECRET"
-update_var "$HUB_ENV" "API_KEY" "$HUB_API_KEY"
 update_var "$HUB_ENV" "HUB_API_KEY" "$HUB_API_KEY"
 update_var "$HUB_ENV" "API_URL" "http://localhost:4000"
 

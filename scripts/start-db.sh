@@ -21,8 +21,8 @@ echo "⏳ Waiting for database to be ready..."
 sleep 5
 
 # Check database health
-if docker-compose -f api/docker-compose.yml exec db pg_isready -U user -d alohawaii_dev; then
-    echo "✅ Database is ready at postgresql://user:password@localhost:5432/alohawaii_dev"
+if docker-compose -f api/docker-compose.yml exec db pg_isready -U user -d alohawaii_db; then
+    echo "✅ Database is ready at postgresql://user:password@localhost:5432/alohawaii_db"
 else
     echo "❌ Database failed to start properly"
     exit 1

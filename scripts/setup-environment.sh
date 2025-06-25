@@ -128,8 +128,7 @@ fi
 
 # Update Hub .env.local
 sed -i '' "s/NEXTAUTH_SECRET=.*/NEXTAUTH_SECRET=\"${NEXTAUTH_SECRET}\"/" ../../hub/.env.local
-sed -i '' "s/API_KEY=.*/API_KEY=\"${HUB_API_KEY}\"/" ../../hub/.env.local
-sed -i '' "s/HUB_API_KEY=.*/HUB_API_KEY=\"${HUB_API_KEY}\"/" ../../hub/.env.local
+sed -i '' "s/API_KEY=.*/HUB_API_KEY=\"${HUB_API_KEY}\"/" ../../hub/.env.local
 
 print_status "Updated Hub environment"
 

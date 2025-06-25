@@ -38,7 +38,7 @@ help:
 	@echo "Development Commands:"
 	@echo "  make shell-api   - Open shell in API container"
 	@echo "  make shell-hub   - Open shell in Hub container"
-	@echo "  make test        - Run API tests"
+	@echo "  make test        - Run API tests (uses mocked database)"
 	@echo "  make migrate     - Run database migrations"
 	@echo "  make seed        - Seed database"
 	@echo ""

@@ -45,7 +45,7 @@ echo "⏳ Waiting for database to be ready..."
 sleep 10
 
 # Check database health
-if docker-compose -f api/docker-compose.yml exec db pg_isready -U user -d alohawaii_dev; then
+if docker-compose -f api/docker-compose.yml exec db pg_isready -U user -d alohawaii_db; then
     echo "✅ Database is healthy"
 else
     echo "❌ Database is not ready"
