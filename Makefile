@@ -1,7 +1,14 @@
 # Alohawaii Development Makefile
 # Simple commands to manage the Docker stack
 
-.PHONY: help setup start start-all start-api start-hub stop restart logs status clean rebuild test setup-repos update-repos split-repos
+.PHONY: help \
+	setup setup-env update-vars gen-keys \
+	start start-all start-hub stop restart \
+	logs logs-api logs-hub status \
+	shell-api shell-hub test migrate seed \
+	clean rebuild \
+	up down ps \
+	setup-repos update-repos split-repos
 .DEFAULT_GOAL := help
 
 # Default target
@@ -11,13 +18,14 @@ help:
 	@echo ""
 	@echo "Setup Commands:"
 	@echo "  make setup       - Initial setup (build images, create network)"
+	@echo "  make setup-env   - Setup environment files and generate secrets"
+	@echo "  make update-vars - Sync variables between Hub and API environments"
 	@echo "  make gen-keys    - Generate secure API keys for development"
 	@echo ""
 	@echo "Service Commands:"
-	@echo "  make start       - Start API + Database"
-	@echo "  make start-all   - Start API + Hub + Database"
-	@echo "  make start-api   - Start API + Database only"
-	@echo "  make start-hub   - Start Hub + API + Database"
+	@echo "  make start       - Start default services (API + Database)"
+	@echo "  make start-all   - Start all services (API + Hub + Database)"
+	@echo "  make start-hub   - Start Hub with supporting services"
 	@echo "  make stop        - Stop all services"
 	@echo "  make restart     - Restart all services"
 	@echo ""
@@ -46,67 +54,38 @@ help:
 # Setup
 setup:
 	@./docker-manager.sh setup
+	@echo "\n🔧 Setting up environment files..."
+	@$(MAKE) setup-env
+
+# Setup environment files and generate secrets
+setup-env:
+	@./scripts/setup-environment.sh
+
+# Update and sync environment variables between Hub and API
+update-vars:
+	@cd scripts && ./update-env-vars.sh
 
 # Generate API keys
 gen-keys:
 	@./scripts/generate-api-keys.sh
 
 # Service management
-start:
-	@./docker-manager.sh start
+start start-all start-hub stop restart:
+	@./docker-manager.sh $@
 
-start-all:
-	@./docker-manager.sh start-all
+# Monitoring commands
+logs logs-api logs-hub status:
+	@./docker-manager.sh $@
 
-start-api:
-	@./docker-manager.sh start-api
+# Development commands
+shell-api shell-hub test migrate seed:
+	@./docker-manager.sh $@
 
-start-hub:
-	@./docker-manager.sh start-hub
+# Maintenance commands
+clean rebuild:
+	@./docker-manager.sh $@
 
-stop:
-	@./docker-manager.sh stop
-
-restart:
-	@./docker-manager.sh restart
-
-# Monitoring
-logs:
-	@./docker-manager.sh logs
-
-logs-api:
-	@./docker-manager.sh logs-api
-
-logs-hub:
-	@./docker-manager.sh logs-hub
-
-status:
-	@./docker-manager.sh status
-
-# Development
-shell-api:
-	@./docker-manager.sh shell-api
-
-shell-hub:
-	@./docker-manager.sh shell-hub
-
-test:
-	@./docker-manager.sh test
-
-migrate:
-	@./docker-manager.sh migrate
-
-seed:
-	@./docker-manager.sh seed
-
-# Maintenance
-clean:
-	@./docker-manager.sh clean
-
-rebuild:
-	@./docker-manager.sh rebuild
-
-# Quick shortcuts
+# Quick shortcuts for common commands
 up: start
 down: stop
 ps: status

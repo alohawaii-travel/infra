@@ -53,11 +53,10 @@ show_help() {
     echo ""
     echo "Commands:"
     echo "  setup           Initial setup - build all images"
-    echo "  start           Start all services (API + Database)"
-    echo "  start-all       Start all services including Hub"
-    echo "  start-api       Start API + Database only"
+    echo "  start           Start default services (API + Database)"
+    echo "  start-all       Start all services (API + Hub + Database)"
     echo "  start-db        Start Database only"
-    echo "  start-hub       Start Hub + API + Database"
+    echo "  start-hub       Start Hub with supporting services"
     echo "  stop            Stop all services"
     echo "  restart         Restart all services"
     echo "  logs            Show logs for all services"
@@ -104,6 +103,16 @@ setup() {
     # Build images
     print_info "Building Docker images..."
     docker-compose build
+    
+    # Ask if environment variables should be synchronized
+    read -p "Do you want to synchronize environment variables between API and Hub? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Synchronizing environment variables..."
+        cd scripts && ./update-env-vars.sh && cd ..
+    else
+        print_info "Skipping environment variable synchronization"
+    fi
     
     print_success "Setup complete!"
     print_info "You can now run: $0 start"
