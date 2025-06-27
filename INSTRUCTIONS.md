@@ -123,9 +123,8 @@ AlohaWaii is a multi-service application consisting of:
    - Generate secure secrets and API keys
 
 2. Or run individual commands:
-   - `make setup-env` - Configure environment files
-   - `make update-vars` - Synchronize variables between API and Hub
-   - `make gen-keys` - Generate new API keys
+   - `make setup` - Configure environment files
+   - `make generate-secrets` - Synchronize variables between API and Hub
 
 ### Service Management
 
@@ -217,7 +216,7 @@ This section is specifically for me (GitHub Copilot) to track the context and st
 - Created `update-env-vars.sh` to synchronize variables between components
 - Added new Makefile targets for environment management:
   - `setup-env`: Complete environment setup
-  - `update-vars`: Sync environment variables
+  - `generate-secrets`: Sync environment variables
 - Simplified Makefile service commands to reduce redundancy
 - Added documentation in `/infra/docs/ENVIRONMENT.md`
 - Fixed issue with the local PostgreSQL instance blocking Docker's port mapping
@@ -291,7 +290,7 @@ The current focus is on:
 - Check API env: `grep -v '^#' /Users/namkyu/Workspace/alohawaii/api/.env.local`
 - Check Hub env: `grep -v '^#' /Users/namkyu/Workspace/alohawaii/hub/.env.local`
 - Check Infra env: `grep -v '^#' /Users/namkyu/Workspace/alohawaii/infra/.env`
-- Regenerate all variables: `make update-vars`
+- Regenerate all variables: `make generate-secrets`
 
 #### Common Commands I Should Use
 - `make status` - Quick check of all service statuses

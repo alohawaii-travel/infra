@@ -65,7 +65,6 @@ show_help() {
     echo "  setup           Initial setup - build all images"
     echo "  start           Start default services (API + Database)"
     echo "  start-all       Start all services (API + Hub + Database)"
-    echo "  start-db        Start Database only"
     echo "  start-hub       Start Hub with supporting services"
     echo "  stop            Stop all services"
     echo "  restart         Restart all services"
