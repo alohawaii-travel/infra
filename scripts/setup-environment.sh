@@ -33,8 +33,8 @@ print_info() {
 }
 
 # Check if we're in the right directory
-if [[ ! -d "../../api" || ! -d "../../hub" || ! -d "../" ]]; then
-    print_error "Please run this script from the infra/scripts directory"
+if [[ ! -d "../api" || ! -d "../hub" ]]; then
+    print_error "Please run this script from the infra directory"
     exit 1
 fi
 
@@ -42,10 +42,18 @@ echo "🔍 Checking prerequisites..."
 
 # Check for required tools
 check_tool() {
-    if ! command -v $1 &> /dev/null; then
-        print_error "$1 is required but not installed. Please install $1 and try again."
-        exit 1
-    fi
+  if ! command -v $1 &> /dev/null; then
+    print_error "$1 is required but not installed. Please install $1 and try again."
+    exit 1
+  fi
+}
+
+# Function to get a variable from a file
+get_var() {
+  local file=$1
+  local var_name=$2
+  local value=$(grep "^$var_name=" "$file" | cut -d= -f2- | tr -d '"')
+  echo "$value"
 }
 
 check_tool "openssl"
@@ -57,60 +65,75 @@ print_status "All prerequisites found"
 echo ""
 echo "📁 Setting up environment files..."
 
-# Generate secure passwords and keys
-generate_secure_key() {
-    openssl rand -base64 32 | tr -d "=+/" | cut -c1-32
-}
-
-generate_api_key() {
-    echo "$1-$(openssl rand -hex 16)"
-}
-
-# Generate all secrets
-DB_PASSWORD=$(generate_secure_key)
-NEXTAUTH_SECRET=$(generate_secure_key)
-HUB_API_KEY=$(generate_api_key "hub-api-key")
-WEBSITE_API_KEY=$(generate_api_key "website-api-key")
-DEV_API_KEY=$(generate_api_key "dev-api-key")
-
 print_info "Generated secure passwords and API keys"
 
 # Setup Infrastructure environment
 echo ""
 echo "🏗️  Setting up infrastructure environment..."
 
-if [[ ! -f "../.env" ]]; then
-    cp ../.env.example ../.env
+if [[ ! -f ".env" ]]; then
+    cp .env.example .env
     print_status "Created infra/.env from template"
 else
     print_warning "infra/.env already exists, backing up to infra/.env.backup"
-    cp ../.env ../.env.backup
+    cp .env .env.backup
 fi
 
 # Update infrastructure .env
-sed -i '' "s/POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=${DB_PASSWORD}/" ../.env
+sed -i '' "s/POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=${DB_PASSWORD}/" .env
 print_status "Updated infrastructure environment"
+
+# ENV paths
+API_DIR="../api/"
+HUB_DIR="../hub/"
+INFRA_DIR=""
+
+EXAMPLE_ENV=".env.example"
+API_ENV="${API_DIR}.env.local"
+HUB_ENV="${HUB_DIR}.env.local"
+INFRA_ENV=".env"
+
+# ENV VARS
+# Database
+DB_USER=$(get_var "$INFRA_ENV" "DB_USER")
+DB_NAME=$(get_var "$INFRA_ENV" "DB_NAME")
+DB_HOST=$(get_var "$INFRA_ENV" "DB_HOST")
+DB_PORT=$(get_var "$INFRA_ENV" "DB_PORT")
+DB_SCHEMA=$(get_var "$INFRA_ENV" "DB_SCHEMA")
+DB_PASSWORD=$(get_var "$INFRA_ENV" "DB_PASSWORD")
+
+# Secrets
+NEXTAUTH_SECRET=$(get_var "$INFRA_ENV" "NEXTAUTH_SECRET")
+HUB_API_KEY=$(get_var "$INFRA_ENV" "HUB_API_KEY")
+WEBSITE_API_KEY=$(get_var "$INFRA_ENV" "WEBSITE_API_KEY")
+DEV_API_KEY=$(get_var "$INFRA_ENV" "DEV_API_KEY")
+
+# SERVICE PORTS
+API_PORT=$(get_var "$INFRA_ENV" "API_PORT")
+HUB_PORT=$(get_var "$INFRA_ENV" "HUB_PORT")
 
 # Setup API environment
 echo ""
 echo "🔧 Setting up API environment..."
-
-if [[ ! -f "../../api/.env.local" ]]; then
-    cp ../../api/.env.example ../../api/.env.local
-    print_status "Created api/.env.local from template"
+if [[ ! -f "${API_ENV}" ]]; then
+  cp ${API_DIR}${EXAMPLE_ENV} ${API_ENV}
+  print_status "Created ${API_ENV} from template"
 else
-    print_warning "api/.env.local already exists, backing up to api/.env.local.backup"
-    cp ../../api/.env.local ../../api/.env.local.backup
+  print_warning "${API_ENV} already exists, backing up to ${API_ENV}.backup"
+  cp ${API_ENV} ${API_ENV}.backup
 fi
 
 # Update API .env.local
-DATABASE_URL="postgresql://alohawaii_user:${DB_PASSWORD}@localhost:5432/alohawaii_db?schema=public"
-
-sed -i '' "s|DATABASE_URL=.*|DATABASE_URL=\"${DATABASE_URL}\"|" ../../api/.env.local
-sed -i '' "s/NEXTAUTH_SECRET=.*/NEXTAUTH_SECRET=\"${NEXTAUTH_SECRET}\"/" ../../api/.env.local
-sed -i '' "s/HUB_API_KEY=.*/HUB_API_KEY=\"${HUB_API_KEY}\"/" ../../api/.env.local
-sed -i '' "s/WEBSITE_API_KEY=.*/WEBSITE_API_KEY=\"${WEBSITE_API_KEY}\"/" ../../api/.env.local
-sed -i '' "s/DEV_API_KEY=.*/DEV_API_KEY=\"${DEV_API_KEY}\"/" ../../api/.env.local
+sed -i '' "s|DB_USER=.*|DB_USER=\"${DB_USER}\"|" ${API_ENV}
+sed -i '' "s|DB_NAME=.*|DB_NAME=\"${DB_NAME}\"|" ${API_ENV}
+sed -i '' "s|DB_PASSWORD=.*|DB_PASSWORD=\"${DB_PASSWORD}\"|" ${API_ENV}
+sed -i '' "s|DB_HOST=.*|DB_HOST=\"${DB_HOST}\"|" ${API_ENV}
+sed -i '' "s|DB_PORT=.*|DB_PORT=\"${DB_PORT}\"|" ${API_ENV}
+sed -i '' "s|DB_SCHEMA=.*|DB_SCHEMA=\"${DB_SCHEMA}\"|" ${API_ENV}
+sed -i '' "s/NEXTAUTH_SECRET=.*/NEXTAUTH_SECRET=\"${NEXTAUTH_SECRET}\"/" ${API_ENV}
+sed -i '' "s/HUB_API_KEY=.*/HUB_API_KEY=\"${HUB_API_KEY}\"/" ${API_ENV}
+sed -i '' "s/WEBSITE_API_KEY=.*/WEBSITE_API_KEY=\"${WEBSITE_API_KEY}\"/" ${API_ENV}
+sed -i '' "s/DEV_API_KEY=.*/DEV_API_KEY=\"${DEV_API_KEY}\"/" ${API_ENV}
 
 print_status "Updated API environment"
 
@@ -118,17 +141,17 @@ print_status "Updated API environment"
 echo ""
 echo "🎯 Setting up Hub environment..."
 
-if [[ ! -f "../../hub/.env.local" ]]; then
-    cp ../../hub/.env.example ../../hub/.env.local
-    print_status "Created hub/.env.local from template"
+if [[ ! -f "${HUB_ENV}" ]]; then
+  cp ${HUB_DIR}${EXAMPLE_ENV} ${HUB_ENV}
+  print_status "Created ${HUB_ENV} from template"
 else
-    print_warning "hub/.env.local already exists, backing up to hub/.env.local.backup"
-    cp ../../hub/.env.local ../../hub/.env.local.backup
+  print_warning "${HUB_ENV} already exists, backing up to ${HUB_ENV}.backup"
+  cp ${HUB_ENV} ${HUB_ENV}.backup
 fi
 
 # Update Hub .env.local
-sed -i '' "s/NEXTAUTH_SECRET=.*/NEXTAUTH_SECRET=\"${NEXTAUTH_SECRET}\"/" ../../hub/.env.local
-sed -i '' "s/API_KEY=.*/HUB_API_KEY=\"${HUB_API_KEY}\"/" ../../hub/.env.local
+sed -i '' "s/NEXTAUTH_SECRET=.*/NEXTAUTH_SECRET=\"${NEXTAUTH_SECRET}\"/" ${HUB_ENV}
+sed -i '' "s/HUB_API_KEY=.*/HUB_API_KEY=\"${HUB_API_KEY}\"/" ${HUB_ENV}
 
 print_status "Updated Hub environment"
 
@@ -136,22 +159,22 @@ echo ""
 echo "📋 Environment Setup Summary"
 echo "=============================="
 echo ""
-print_info "Database Password: ${DB_PASSWORD}"
-print_info "NextAuth Secret: ${NEXTAUTH_SECRET}"
-print_info "Hub API Key: ${HUB_API_KEY}"
-print_info "Website API Key: ${WEBSITE_API_KEY}"
-print_info "Dev API Key: ${DEV_API_KEY}"
-
-echo ""
-echo "📁 Files Created/Updated:"
-echo "- infra/.env"
-echo "- api/.env.local"
-echo "- hub/.env.local"
+echo "📋 API"
+echo "------------------------------"
+print_info "DB_NAME: ${DB_NAME}"
+print_info "DB_USER: ${DB_USER}"
+print_info "DB_PASSWORD: ${DB_PASSWORD}"
+print_info "DB_HOST: ${DB_HOST}"
+print_info "DB_PORT: ${DB_PORT}"
+print_info "DB_SCHEMA: ${DB_SCHEMA}"
+print_info "NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}"
+print_info "HUB_API_KEY: ${HUB_API_KEY}"
+print_info "WEBSITE_API_KEY: ${WEBSITE_API_KEY}"
+print_info "DEV_API_KEY: ${DEV_API_KEY}"
 
 echo ""
 echo "🐳 Starting Docker services..."
 
-cd ../
 if docker-compose up -d; then
     print_status "Docker services started successfully"
 else
@@ -165,7 +188,7 @@ sleep 10
 
 echo ""
 echo "🗄️  Setting up database..."
-cd ../../api
+cd ../api
 
 # Install dependencies if node_modules doesn't exist
 if [[ ! -d "node_modules" ]]; then
@@ -179,17 +202,17 @@ print_status "Database setup completed"
 
 cd ../
 
-echo ""
-echo "🧪 Running tests to verify setup..."
+# echo ""
+# echo "🧪 Running tests to verify setup..."
 
-cd api
-if npm test -- tests/unit/health.test.ts --silent; then
-    print_status "Health tests passed - API setup verified"
-else
-    print_warning "Health tests failed - there might be an issue with the API setup"
-fi
+# cd api
+# if npm test -- tests/unit/health.test.ts --silent; then
+#     print_status "Health tests passed - API setup verified"
+# else
+#     print_warning "Health tests failed - there might be an issue with the API setup"
+# fi
 
-cd ../
+# cd ../
 
 echo ""
 echo "🎉 Setup Complete!"

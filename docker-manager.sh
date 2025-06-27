@@ -14,6 +14,16 @@ NC='\033[0m' # No Color
 
 # Functions
 print_header() {
+    echo -e "${YELLOW}=================================================================${NC}"
+    echo -e "${YELLOW}  ____  _       ___   __ __   ____  __    __   ____  ____  ____ ${NC}"
+    echo -e "${YELLOW} /    || |     /   \\ |  |  | /    ||  |__|  | /    ||    ||    |${NC}"
+    echo -e "${YELLOW}|  o  || |    |     ||  |  ||  o  ||  |  |  ||  o  | |  |  |  | ${NC}"
+    echo -e "${YELLOW}|     || |___ |  O  ||  _  ||     ||  |  |  ||     | |  |  |  | ${NC}"
+    echo -e "${YELLOW}|  _  ||     ||     ||  |  ||  _  ||  \`  '  ||  _  | |  |  |  | ${NC}"
+    echo -e "${YELLOW}|  |  ||     ||     ||  |  ||  |  | \\      / |  |  | |  |  |  | ${NC}"
+    echo -e "${YELLOW}|__|__||_____| \\___/ |__|__||__|__|  \\_/\\_/  |__|__||____||____|${NC}"
+    echo -e ""
+    echo -e "${YELLOW}-----------------------------------------------------------------${NC}"
     echo -e "${BLUE}🌺 Alohawaii Docker Manager${NC}"
     echo -e "${BLUE}=============================${NC}"
 }
@@ -105,11 +115,11 @@ setup() {
     docker-compose build
     
     # Ask if environment variables should be synchronized
-    read -p "Do you want to synchronize environment variables between API and Hub? (y/N): " -n 1 -r
+    read -p "Generate random secrets? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         print_info "Synchronizing environment variables..."
-        cd scripts && ./update-env-vars.sh && cd ..
+        cd scripts && ./generate-random-secrets.sh && cd ..
     else
         print_info "Skipping environment variable synchronization"
     fi
